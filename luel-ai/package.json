@@ -10,8 +10,11 @@
   },
   "dependencies": {
     "next": "16.1.6",
+    "pdf-lib": "^1.17.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-pdf": "^10.4.1",
+    "react-signature-canvas": "^1.1.0-alpha.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
