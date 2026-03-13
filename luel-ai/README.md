@@ -2,7 +2,42 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (v18 or later)
+- Docker Desktop (for local PostgreSQL database)
+
+### Local Database Setup
+
+1. **Start the PostgreSQL database:**
+   ```bash
+   docker compose up -d
+   ```
+
+2. **Verify the database is running:**
+   ```bash
+   docker compose ps
+   ```
+
+3. **View database logs (optional):**
+   ```bash
+   docker compose logs -f postgres
+   ```
+
+4. **Create `.env` file** (copy from `.env.example` if it exists, or create with these values):
+   ```env
+   DATABASE_URL=postgresql://luel_user:luel_password@localhost:5432/luel_esign
+   ```
+
+The database will automatically initialize with the schema from `Luel-esign.sql` on first startup.
+
+**Useful commands:**
+- Stop database: `docker compose down`
+- Reset database (⚠️ deletes all data): `docker compose down -v && docker compose up -d`
+
+### Development Server
+
+Run the development server:
 
 ```bash
 npm run dev
