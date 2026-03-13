@@ -21,11 +21,13 @@ export interface AuditLogEntry {
 }
 
 /**
- * Email addresses for delivery.
+ * Email addresses and optional display names for delivery.
  */
 export interface ProcessFinalEnvelopeEmails {
   senderEmail: string;
   signerEmail: string;
+  senderName?: string;
+  signerName?: string;
 }
 
 /**

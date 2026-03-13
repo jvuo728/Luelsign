@@ -47,11 +47,15 @@ export async function sendFinalPackage(
     (e, i, a) => a.indexOf(e) === i
   );
 
+  const senderLabel = emails.senderName ? `${emails.senderName} <${process.env.EMAIL_USER ?? emails.senderEmail}>` : (process.env.EMAIL_USER ?? emails.senderEmail);
+  const greeting = emails.signerName ? `Hi ${emails.signerName},` : 'Hi,';
+  const closing = emails.senderName ? `\n\n— ${emails.senderName}` : '';
+
   await transporter.sendMail({
-    from: process.env.EMAIL_USER ?? emails.senderEmail,
+    from: senderLabel,
     to: recipients.join(', '),
     subject: `Signed documents – Envelope ${envelopeId}`,
-    text: `Please find attached the signed document and the Certificate of Completion for envelope ${envelopeId}.`,
+    text: `${greeting}\n\nPlease find attached the signed document and the Certificate of Completion for envelope ${envelopeId}.${closing}`,
     attachments: [
       {
         filename: `signed-document-${envelopeId}.pdf`,

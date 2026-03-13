@@ -2,7 +2,69 @@
 
 Server-side **PDF Flattening & Final Package** module for a custom e-signature platform. Flattens signed PDFs (burns signatures and text into the content stream), generates a Certificate of Completion (audit trail), and emails both to participants.
 
-## Usage
+## POST API (recommended)
+
+From the project root, start the app then POST a PDF:
+
+```bash
+cd luel-ai && npm run dev
+```
+
+In another terminal (or from the frontend):
+
+```bash
+curl -X POST http://localhost:3000/api/flatten-pdf \
+  -F "pdf=@/path/to/your-document.pdf"
+```
+
+Optional form fields (or include in `options` JSON):
+
+| Field            | Description                    |
+|------------------|--------------------------------|
+| `senderName`     | Sender's display name          |
+| `senderEmail`    | Sender's email address         |
+| `recipientName`  | Recipient's (signer) name      |
+| `recipientEmail` | Recipient's (signer) email     |
+
+Example with all parameters:
+
+```bash
+curl -X POST http://localhost:3000/api/flatten-pdf \
+  -F "pdf=@/path/to/your-document.pdf" \
+  -F "senderName=Alice" \
+  -F "senderEmail=alice@example.com" \
+  -F "recipientName=Bob" \
+  -F "recipientEmail=bob@example.com"
+```
+
+Or via JSON `options`:
+
+```bash
+curl -X POST http://localhost:3000/api/flatten-pdf \
+  -F "pdf=@/path/to/your-document.pdf" \
+  -F 'options={"senderName":"Alice","senderEmail":"alice@example.com","recipientName":"Bob","recipientEmail":"bob@example.com"}'
+```
+
+Response: `{ "success": true, "envelopeId": "uuid", "error": null }` or `{ "success": false, "envelopeId": "uuid", "error": "..." }`. The flattened PDF and certificate are emailed; they are not returned in the response.
+
+## Demo script (input PDF → flatten + certificate + email)
+
+Pass a path to your PDF; the script flattens it, generates the certificate, and emails both to the configured address:
+
+```bash
+cd luel-ai
+npm run pdf-flatten:demo -- path/to/your-document.pdf
+```
+
+Example with a file in the repo:
+
+```bash
+npm run pdf-flatten:demo -- kabilesh16-pdf-flatten/demo-output/flattened-4c1ad4c7-27c2-410e-aaa5-a0bbc9fc9ac4.pdf
+```
+
+Outputs are written to `kabilesh16-pdf-flatten/demo-output/`. Edit `run-demo.ts` to change `fieldData`, `auditLog`, or `emails`.
+
+## Programmatic usage
 
 ```ts
 import { processFinalEnvelope } from '@/kabilesh16-pdf-flatten';
