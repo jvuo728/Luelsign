@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import { pool } from '@/app/lib/db';
 
 /**
- * Mock database writes for Recipient Setup & Send endpoint
+ * Database writes for Recipient Setup & Send endpoint
  * 
  * This endpoint creates records in the following tables (per Luel-esign.sql schema):
  * 
@@ -42,9 +43,6 @@ export async function POST(request: NextRequest) {
     const envelopeId = randomUUID();
     const recipientId = randomUUID();
     const auditEventId = randomUUID();
-    
-    // Mock owner_user_id (in production, this would come from authenticated session)
-    const ownerUserId = randomUUID();
 
     // Generate a secure UUID v4 for the signing token
     const signingToken = randomUUID();
@@ -60,52 +58,101 @@ export async function POST(request: NextRequest) {
     const originalPdfPath = `/uploads/envelopes/${envelopeId}/original.pdf`;
     const flattenedPdfPath = null; // Optional field, set to null initially
 
-    // Mock 'append-only' database write for envelopes table
-    // Schema: id, owner_user_id, title, status, original_pdf_path, flattened_pdf_path, created_at, updated_at
-    console.log('DB_WRITE: envelopes');
-    console.log(JSON.stringify({
-      id: envelopeId,
-      owner_user_id: ownerUserId,
-      title: null, // Optional field
-      status: 'draft', // Required: draft, pending, sent, completed, cancelled, etc.
-      original_pdf_path: originalPdfPath, // Required
-      flattened_pdf_path: flattenedPdfPath, // Optional
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
-    }, null, 2));
+    // Use a transaction to ensure all inserts succeed or all fail
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    // Mock 'append-only' database write for recipients table
-    // Schema: id, envelope_id, name, email, signing_token, token_expires_at, status, created_at, updated_at
-    console.log('DB_WRITE: recipients');
-    console.log(JSON.stringify({
-      id: recipientId,
-      envelope_id: envelopeId,
-      name: name, // Required
-      email: email, // Required
-      signing_token: signingToken, // Required, UNIQUE
-      token_expires_at: tokenExpiresAt.toISOString(), // Required
-      status: 'pending', // Required: pending, sent, signed, declined, etc.
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
-    }, null, 2));
+      // Get or create a default user for development
+      // In production, this would come from authenticated session
+      const defaultUserEmail = 'dev@luel.local';
+      const defaultUserName = 'Development User';
+      
+      // Try to get existing user first
+      let ownerUserId: string;
+      const userResult = await client.query(
+        `SELECT id FROM users WHERE email = $1`,
+        [defaultUserEmail]
+      );
 
-    // Mock audit trail write for audit_events table
-    // Schema: id, envelope_id, recipient_id, event_type, event_time_utc, ip_address, user_agent, metadata, created_at
-    console.log('DB_WRITE: audit_events');
-    console.log(JSON.stringify({
-      id: auditEventId,
-      envelope_id: envelopeId, // Required, FK to envelopes
-      recipient_id: recipientId, // Optional, FK to recipients (included since we're creating recipient)
-      event_type: 'envelope_created', // Required
-      event_time_utc: now.toISOString(), // Required
-      ip_address: ipAddress, // Optional
-      user_agent: userAgent, // Optional
-      metadata: { // Optional JSONB field
+      if (userResult.rows.length > 0) {
+        // User exists, use their ID
+        ownerUserId = userResult.rows[0].id;
+      } else {
+        // Create new default user
+        ownerUserId = randomUUID();
+        await client.query(
+          `INSERT INTO users (id, email, name, created_at)
+           VALUES ($1, $2, $3, $4)`,
+          [ownerUserId, defaultUserEmail, defaultUserName, now]
+        );
+      }
+
+      // Database write for envelopes table
+      // Schema: id, owner_user_id, title, status, original_pdf_path, flattened_pdf_path, created_at, updated_at
+      await client.query(
+        `INSERT INTO envelopes (id, owner_user_id, title, status, original_pdf_path, flattened_pdf_path, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          envelopeId,
+          ownerUserId,
+          null, // title (optional)
+          'draft', // status
+          originalPdfPath,
+          flattenedPdfPath,
+          now,
+          now,
+        ]
+      );
+
+      // Database write for recipients table
+      // Schema: id, envelope_id, name, email, signing_token, token_expires_at, status, created_at, updated_at
+      await client.query(
+        `INSERT INTO recipients (id, envelope_id, name, email, signing_token, token_expires_at, status, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          recipientId,
+          envelopeId,
+          name,
+          email,
+          signingToken,
+          tokenExpiresAt,
+          'pending', // status
+          now,
+          now,
+        ]
+      );
+
+      // Database write for audit_events table
+      // Schema: id, envelope_id, recipient_id, event_type, event_time_utc, ip_address, user_agent, metadata, created_at
+      const metadata = {
         action: 'recipient_setup',
         recipient_email: email,
-      },
-      created_at: now.toISOString(),
-    }, null, 2));
+      };
+
+      await client.query(
+        `INSERT INTO audit_events (id, envelope_id, recipient_id, event_type, event_time_utc, ip_address, user_agent, metadata, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          auditEventId,
+          envelopeId,
+          recipientId,
+          'envelope_created',
+          now,
+          ipAddress,
+          userAgent,
+          JSON.stringify(metadata), // JSONB field
+          now,
+        ]
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     return NextResponse.json(
       {
