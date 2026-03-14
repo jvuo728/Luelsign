@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
+  const router = useRouter();
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,9 +34,7 @@ export default function UploadPage() {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const json = await res.json();
       if (res.ok) {
-        setStatus("success");
-        setMessage(`Uploaded: ${json.filename}`);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        router.push(`/field-placement?file=${encodeURIComponent(json.filename)}`);
       } else {
         setStatus("error");
         setMessage(json.error ?? "Upload failed.");
