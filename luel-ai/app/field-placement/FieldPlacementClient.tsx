@@ -542,7 +542,7 @@ function FieldPlacementInner() {
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400"
+                  className="w-full px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400"
                 />
                 <input
                   type="email"
@@ -550,7 +550,7 @@ function FieldPlacementInner() {
                   value={signerEmail}
                   onChange={(e) => setSignerEmail(e.target.value)}
                   required
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400"
+                  className="w-full px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400"
                 />
                 <button
                   type="submit"
@@ -570,11 +570,11 @@ function FieldPlacementInner() {
                   <input
                     readOnly
                     value={signingUrl ?? ""}
-                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-gray-50 truncate"
+                    className="flex-1 px-2 py-1.5 text-xs text-gray-800 bg-gray-100 border border-gray-300 rounded-lg truncate"
                   />
                   <button
                     onClick={() => navigator.clipboard.writeText(signingUrl ?? "")}
-                    className="px-2 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex-shrink-0"
                   >
                     Copy
                   </button>
