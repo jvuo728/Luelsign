@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { pool } from '@/app/lib/db';
+import { getPool } from '@/app/lib/db';
 
 /**
  * Database writes for Recipient Setup & Send endpoint
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     const flattenedPdfPath = null; // Optional field, set to null initially
 
     // Use a transaction to ensure all inserts succeed or all fail
+    const pool = getPool();
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
