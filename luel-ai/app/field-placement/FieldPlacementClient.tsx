@@ -110,6 +110,12 @@ function FieldPlacementInner() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Send for signing
+  const [signerName, setSignerName] = useState("");
+  const [signerEmail, setSignerEmail] = useState("");
+  const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [signingUrl, setSigningUrl] = useState<string | null>(null);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const renderTaskRef = useRef<RenderTask | null>(null);
@@ -340,11 +346,41 @@ function FieldPlacementInner() {
           body: JSON.stringify({ fields }),
         }
       );
-      if (res.ok) setSaved(true);
+      if (res.ok) {
+        setSaved(true);
+        setSigningUrl(null); // reset if fields changed
+      }
     } catch {
       // ignore
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signerName.trim() || !signerEmail.trim()) return;
+    setSendStatus("sending");
+    try {
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentId,
+          signerName: signerName.trim(),
+          signerEmail: signerEmail.trim(),
+          fields,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setSigningUrl(`${window.location.origin}${json.signingUrl}`);
+        setSendStatus("sent");
+      } else {
+        setSendStatus("error");
+      }
+    } catch {
+      setSendStatus("error");
     }
   }
 
@@ -490,6 +526,69 @@ function FieldPlacementInner() {
             <p className="text-xs text-green-600 text-center">Fields saved.</p>
           )}
         </div>
+
+        {/* Send for Signing — shown after fields are saved */}
+        {saved && (
+          <div className="flex flex-col gap-3 border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Send for Signing
+            </p>
+
+            {sendStatus !== "sent" ? (
+              <form onSubmit={handleSend} className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Signer name"
+                  value={signerName}
+                  onChange={(e) => setSignerName(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400"
+                />
+                <input
+                  type="email"
+                  placeholder="Signer email"
+                  value={signerEmail}
+                  onChange={(e) => setSignerEmail(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400"
+                />
+                <button
+                  type="submit"
+                  disabled={sendStatus === "sending"}
+                  className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white text-sm font-medium rounded-xl transition-colors"
+                >
+                  {sendStatus === "sending" ? "Creating link..." : "Generate Signing Link"}
+                </button>
+                {sendStatus === "error" && (
+                  <p className="text-xs text-red-600 text-center">Failed to create link. Try again.</p>
+                )}
+              </form>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-green-600">Signing link ready — share it with the signer:</p>
+                <div className="flex gap-1">
+                  <input
+                    readOnly
+                    value={signingUrl ?? ""}
+                    className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-gray-50 truncate"
+                  />
+                  <button
+                    onClick={() => navigator.clipboard.writeText(signingUrl ?? "")}
+                    className="px-2 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setSendStatus("idle"); setSigningUrl(null); }}
+                  className="text-xs text-gray-400 hover:text-gray-600 text-center"
+                >
+                  Create another link
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </aside>
 
       {/* Canvas area */}
