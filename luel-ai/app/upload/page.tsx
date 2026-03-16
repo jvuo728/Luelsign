@@ -75,7 +75,7 @@ export default function UploadPage() {
           <button
             type="submit"
             disabled={status === "uploading"}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400
+            className="w-full py-2.5 px-4 btn-brand disabled:opacity-50
               text-white font-medium rounded-xl transition-colors"
           >
             {status === "uploading" ? "Uploading..." : "Upload"}

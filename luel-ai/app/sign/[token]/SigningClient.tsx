@@ -275,7 +275,7 @@ export default function SigningClient({ token }: { token: string }) {
         <button
           onClick={handleSubmit}
           disabled={submitStatus === "submitting" || !session}
-          className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white text-sm font-medium rounded-xl transition-colors"
+          className="w-full py-2.5 px-4 btn-brand disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors"
         >
           {submitStatus === "submitting" ? "Signing..." : "Submit Signature"}
         </button>

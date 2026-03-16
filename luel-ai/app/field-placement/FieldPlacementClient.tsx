@@ -522,7 +522,7 @@ function FieldPlacementInner() {
           <button
             onClick={handleSave}
             disabled={fields.length === 0 || saving}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-medium rounded-xl transition-colors"
+            className="w-full py-2.5 px-4 btn-brand disabled:bg-blue-300 text-white text-sm font-medium rounded-xl transition-colors"
           >
             {saving ? "Saving..." : "Save Fields"}
           </button>
@@ -575,7 +575,7 @@ function FieldPlacementInner() {
                 <button
                   type="submit"
                   disabled={sendStatus === "sending"}
-                  className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white text-sm font-medium rounded-xl transition-colors"
+                  className="w-full py-2 px-4 btn-brand disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors"
                 >
                   {sendStatus === "sending" ? "Sending..." : "Send for Signing"}
                 </button>
@@ -594,7 +594,7 @@ function FieldPlacementInner() {
                   />
                   <button
                     onClick={() => navigator.clipboard.writeText(signingUrl ?? "")}
-                    className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex-shrink-0"
+                    className="px-3 py-1.5 text-xs font-medium text-white btn-brand rounded-lg transition-colors flex-shrink-0"
                   >
                     Copy
                   </button>
