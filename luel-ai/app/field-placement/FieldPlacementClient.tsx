@@ -111,6 +111,8 @@ function FieldPlacementInner() {
   const [saving, setSaving] = useState(false);
 
   // Send for signing
+  const [senderName, setSenderName] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
   const [signerName, setSignerName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
   const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -359,7 +361,7 @@ function FieldPlacementInner() {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!signerName.trim() || !signerEmail.trim()) return;
+    if (!senderName.trim() || !senderEmail.trim() || !signerName.trim() || !signerEmail.trim()) return;
     setSendStatus("sending");
     try {
       const res = await fetch("/api/sessions", {
@@ -367,6 +369,8 @@ function FieldPlacementInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           documentId,
+          senderName: senderName.trim(),
+          senderEmail: senderEmail.trim(),
           signerName: signerName.trim(),
           signerEmail: signerEmail.trim(),
           fields,
@@ -538,6 +542,22 @@ function FieldPlacementInner() {
               <form onSubmit={handleSend} className="flex flex-col gap-2">
                 <input
                   type="text"
+                  placeholder="Your name (sender)"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400"
+                />
+                <input
+                  type="email"
+                  placeholder="Your email (sender)"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400"
+                />
+                <input
+                  type="text"
                   placeholder="Signer name"
                   value={signerName}
                   onChange={(e) => setSignerName(e.target.value)}
@@ -557,15 +577,15 @@ function FieldPlacementInner() {
                   disabled={sendStatus === "sending"}
                   className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white text-sm font-medium rounded-xl transition-colors"
                 >
-                  {sendStatus === "sending" ? "Creating link..." : "Generate Signing Link"}
+                  {sendStatus === "sending" ? "Sending..." : "Send for Signing"}
                 </button>
                 {sendStatus === "error" && (
-                  <p className="text-xs text-red-600 text-center">Failed to create link. Try again.</p>
+                  <p className="text-xs text-red-600 text-center">Failed to send. Try again.</p>
                 )}
               </form>
             ) : (
               <div className="flex flex-col gap-2">
-                <p className="text-xs text-green-600">Signing link ready — share it with the signer:</p>
+                <p className="text-xs text-green-600">Signing link sent to {signerEmail}:</p>
                 <div className="flex gap-1">
                   <input
                     readOnly

@@ -3,6 +3,8 @@ import type { Field } from "./types";
 export interface SigningSession {
   token: string;
   documentId: string;
+  senderName: string;
+  senderEmail: string;
   signerName: string;
   signerEmail: string;
   fields: Field[];
@@ -21,6 +23,8 @@ const store: Map<string, SigningSession> =
 
 export function createSession(
   documentId: string,
+  senderName: string,
+  senderEmail: string,
   signerName: string,
   signerEmail: string,
   fields: Field[]
@@ -29,6 +33,8 @@ export function createSession(
   const session: SigningSession = {
     token,
     documentId,
+    senderName,
+    senderEmail,
     signerName,
     signerEmail,
     fields,

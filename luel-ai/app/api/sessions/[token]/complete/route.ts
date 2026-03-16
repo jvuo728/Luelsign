@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, completeSession } from "@/lib/sessions";
 import { flattenFields } from "@/lib/flatten";
+import { sendSignedDocumentEmail } from "@/kabilesh16-pdf-flatten/sendEmail";
+import { createCertificatePdf } from "@/kabilesh16-pdf-flatten/createCertificate";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
@@ -42,6 +44,24 @@ export async function POST(req: NextRequest, { params }: Params) {
   // Derive a clean download filename
   const originalName = session.documentId.replace(/^[0-9a-f-]{36}-/i, "");
   const downloadName = `signed-${originalName}`;
+
+  // Generate certificate of completion
+  const now = new Date().toISOString();
+  const certificateBuffer = await createCertificatePdf(token, [
+    { timestamp: session.createdAt ? new Date(session.createdAt).toISOString() : now, action: 'Document sent', ip: 'N/A', userAgent: 'N/A' },
+    { timestamp: now, action: `Signed by ${session.signerName} (${session.signerEmail})`, ip: 'N/A', userAgent: 'N/A' },
+  ]);
+
+  // Email the signed PDF and certificate back to the sender
+  await sendSignedDocumentEmail({
+    senderName: session.senderName,
+    senderEmail: session.senderEmail,
+    signerName: session.signerName,
+    signedPdfBuffer: Buffer.from(signedBytes),
+    signedPdfFilename: downloadName,
+    certificateBuffer,
+    certificateFilename: `certificate-${token}.pdf`,
+  });
 
   return new Response(Buffer.from(signedBytes), {
     headers: {
