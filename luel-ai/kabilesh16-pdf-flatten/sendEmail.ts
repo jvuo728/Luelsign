@@ -55,7 +55,8 @@ export async function sendFinalPackage(
     from: senderLabel,
     to: recipients.join(', '),
     subject: `Signed documents – Envelope ${envelopeId}`,
-    text: `${greeting}\n\nPlease sign the attached document: [
+    text: `${greeting}\n\nPlease sign the attached document.${closing}`,
+    attachments: [
       {
         filename: `signed-document-${envelopeId}.pdf`,
         content: flattenedPdfBuffer,
